@@ -38,14 +38,26 @@ if __name__ == "__main__":
     labels = sorted(list(set(os.listdir(opt.dataset_path))))
 
     # Define model and load model checkpoint
-    model = ConvLSTM(input_shape=input_shape, num_classes=len(labels), latent_dim=opt.latent_dim)
+    ## model = ConvLSTM(num_classes=len(labels), latent_dim=opt.latent_dim)
+    model = ConvLSTM(
+        num_classes=101,
+        latent_dim=512,
+        lstm_layers=1,
+        hidden_dim=1024,
+        bidirectional=False,
+    )
     model.to(device)
-    model.load_state_dict(torch.load(opt.checkpoint_model))
+    # 在这里更改
+    checkpoint = torch.load(opt.checkpoint_model, map_location=device)
+
+    new_state_dict = {k.replace('lstm.final', 'output_layers'): v for k, v in checkpoint.items()}
+
+    model.load_state_dict(new_state_dict, strict=False)
     model.eval()
 
     # Extract predictions
     output_frames = []
-    for frame in tqdm.tqdm(extract_frames(opt.video_path), desc="Processing frames"):
+    for frame in tqdm.tqdm(extract_frames(opt.video_path,0), desc="Processing frames"):
         image_tensor = Variable(transform(frame)).to(device)
         image_tensor = image_tensor.view(1, 1, *image_tensor.shape)
 

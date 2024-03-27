@@ -1,9 +1,9 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch
-import numpy as np
 from torch.autograd import Variable
-from torchvision.models import resnet152
+from torchvision.models import resnet152, ResNet152_Weights
+
 
 ##############################
 #         Encoder
@@ -13,7 +13,7 @@ from torchvision.models import resnet152
 class Encoder(nn.Module):
     def __init__(self, latent_dim):
         super(Encoder, self).__init__()
-        resnet = resnet152(pretrained=True)
+        resnet = resnet152(weights=ResNet152_Weights.IMAGENET1K_V1)
         self.feature_extractor = nn.Sequential(*list(resnet.children())[:-1])
         self.final = nn.Sequential(
             nn.Linear(resnet.fc.in_features, latent_dim), nn.BatchNorm1d(latent_dim, momentum=0.01)
@@ -117,7 +117,7 @@ class ConvLSTM(nn.Module):
 class ConvClassifier(nn.Module):
     def __init__(self, num_classes, latent_dim):
         super(ConvClassifier, self).__init__()
-        resnet = resnet152(pretrained=True)
+        resnet = resnet152(weights=ResNet152_Weights.IMAGENET1K_V1)
         self.feature_extractor = nn.Sequential(*list(resnet.children())[:-1])
         self.final = nn.Sequential(
             nn.Linear(resnet.fc.in_features, latent_dim),
